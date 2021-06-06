@@ -16,30 +16,37 @@ typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
 
 typedef struct car
 {
-	const wchar_t mas[2][3] = {
-		{0x2584, 0x2588, 0x2584}
-		,{0x2584, 0x2580, 0x2584}
+	const wchar_t mas[4][6] = {
+		{0x0020, 0x0020, 0x2588, 0x2588, 0x0020, 0x0020}
+		,{0x2588, 0x2588, 0x2588, 0x2588, 0x2588, 0x2588}
+		,{0x0020, 0x0020, 0x2588, 0x2588, 0x0020, 0x0020}
+		,{0x2588, 0x2588, 0x0020, 0x0020, 0x2588, 0x2588}
 	};
+	const short speedLevel[2] = { 0, 1 };
+	const short acceleration = 2;
 } Car;
 
 typedef struct track
 {
-	static const short widthTrack = 12;
-	static const short heightTrack = 14;
-	const wchar_t startLine[widthTrack] = { 0x255A, 0x2550, 0x2550,
-											0x2550, 0x2550, 0x2550,
-											0x2550, 0x2550, 0x2550,
-											0x2550, 0x2550, 0x255D
+	static const short widthTrack = 20;
+	static const short heightTrack = 28;
+	const wchar_t startLine[widthTrack] = { 
+		0x255A, 0x2550, 0x2550, 0x2550, 0x2550,
+		0x2550, 0x2550, 0x2550, 0x2550, 0x2550,
+		0x2550, 0x2550, 0x2550, 0x2550, 0x2550,
+		0x2550, 0x2550, 0x2550, 0x2550, 0x255D
 	};
-	const wchar_t middlePart[widthTrack] = { 0x2551, 0x0020, 0x0020,
-											 0x0020, 0x0020, 0x0020,
-											 0x0020, 0x0020, 0x0020,
-											 0x0020, 0x0020, 0x2551
+	const wchar_t middlePart[widthTrack] = { 
+		0x2551, 0x0020, 0x0020, 0x0020, 0x0020,
+		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
+		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
+		0x0020, 0x0020, 0x0020, 0x0020, 0x2551
 	};
-	const wchar_t emptyPart[widthTrack] = {  0x0020, 0x0020, 0x0020,
-											 0x0020, 0x0020, 0x0020,
-											 0x0020, 0x0020, 0x0020,
-											 0x0020, 0x0020, 0x0020
+	const wchar_t emptyPart[widthTrack] = {  
+		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
+		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
+		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
+		0x0020, 0x0020, 0x0020, 0x0020, 0x0020
 	};
 	wchar_t trackField[heightTrack][widthTrack] = { {' '} };
 } Track;
@@ -67,17 +74,17 @@ int main()
 	{
 		if (i != 0)
 		{
-			static short ctn = 3;
-			if (ctn < 3)
+			static short ctn = 6;
+			if (ctn > 1 && ctn < 6)
 			{
-				wmemcpy(newTrack.trackField[i], newTrack.middlePart, newTrack.widthTrack);
-				ctn++;
+				wmemcpy(newTrack.trackField[i], newTrack.middlePart, newTrack.widthTrack);				
 			}
 			else
 			{
 				wmemcpy(newTrack.trackField[i], newTrack.emptyPart, newTrack.widthTrack);
-				ctn = 1;
+				if (ctn > 2) ctn = 0;
 			}
+			ctn++;
 		}
 		else wmemcpy(newTrack.trackField[i], newTrack.startLine, newTrack.widthTrack);
 				
@@ -93,6 +100,8 @@ int main()
 			chrono::duration<float> elapsedTime = tp2 - tp1;
 			tp1 = tp2;
 			float fElapsedTime = elapsedTime.count();
+
+			//swprintf_s(newTrack.trackField[newTrack.heightTrack-1], newTrack.widthTrack, L"FPS=%3.0f",  1.0f / fElapsedTime);
 			
 			short invert = newTrack.heightTrack - i - 1;
 			WriteConsoleOutputCharacter(hConsole, newTrack.trackField[i], newTrack.widthTrack, { 0, invert }, &dwBytesWritten);
