@@ -4,15 +4,6 @@
 #include <chrono>
 
 using namespace std;
-/*
-typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
-	COORD dwSize;
-	COORD dwCursorPosition;
-	WORD wAttributes;
-	SMALL_RECT srWindow;
-	COORD dwMaximumWindowSize;
-} CONSOLE_SCREEN_BUFFER_INFO;
-*/
 
 typedef struct car
 {
@@ -48,45 +39,79 @@ typedef struct track
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020
 	};
-	wchar_t trackField[heightTrack][widthTrack] = { {' '} };
+	wchar_t trackField[heightTrack][widthTrack];// = { {' '} };
 	short partLineNumber[heightTrack];
 	boolean NeedRefreshScreen = false;
 } Track;
+
+typedef struct gameField
+{
+	static const short widthGameField = 45;
+	static const short heightGameField = 35;
+	static const short startPosWidthTrack = 2;
+	static const short startPosHeightTrack = 4;
+
+	static const short delayForStart = 1;
+
+	wchar_t characterCells[heightGameField][widthGameField];// = { {' '} };
+	boolean needRefreshScreen = false;
+	gameField()
+	{
+		for (short i = 0; i < heightGameField; i++)		
+			for (short j = 0; j < widthGameField; j++)
+			{
+				characterCells[i][j] = ' ';
+			}
+		
+	}
+} GameField;
 
 
 int nScreenWidth = 120;	
 int nScreenHeight = 40;
 
 
-void addNextLine(boolean isFirst, Track &currentTrack)
+void addNextLine(boolean isFirst, Track &currTrack)
 {
-	currentTrack.NeedRefreshScreen = true;
-	for (short i = 0; i < currentTrack.heightTrack; i++)
+	currTrack.NeedRefreshScreen = true;
+	for (short i = 0; i < currTrack.heightTrack; i++)
 	{
-		if (!isFirst && i < currentTrack.heightTrack - 1)
+		if (!isFirst && i < currTrack.heightTrack - 1)
 		{
-			wmemcpy(currentTrack.trackField[i], currentTrack.trackField[i + 1], currentTrack.widthTrack);
-			currentTrack.partLineNumber[i] = currentTrack.partLineNumber[i + 1];
+			wmemcpy(currTrack.trackField[i], currTrack.trackField[i + 1], currTrack.widthTrack);
+			currTrack.partLineNumber[i] = currTrack.partLineNumber[i + 1];
 		}
 		else if (i != 0)
 		{
-			currentTrack.partLineNumber[i] = currentTrack.partLineNumber[i - 1] + 1;
-			if (currentTrack.partLineNumber[i] > 1 && currentTrack.partLineNumber[i] < 6)
+			currTrack.partLineNumber[i] = currTrack.partLineNumber[i - 1] + 1;
+			if (currTrack.partLineNumber[i] > 1 && currTrack.partLineNumber[i] < 6)
 			{
-				wmemcpy(currentTrack.trackField[i], currentTrack.middlePart, currentTrack.widthTrack);
+				wmemcpy(currTrack.trackField[i], currTrack.middlePart, currTrack.widthTrack);
 			}
 			else
 			{
-				wmemcpy(currentTrack.trackField[i], currentTrack.emptyPart, currentTrack.widthTrack);
-				if (currentTrack.partLineNumber[i] > 2) currentTrack.partLineNumber[i] = 0;
+				wmemcpy(currTrack.trackField[i], currTrack.emptyPart, currTrack.widthTrack);
+				if (currTrack.partLineNumber[i] > 2) currTrack.partLineNumber[i] = 0;
 			}			
 		}
 		else
 		{
-			wmemcpy(currentTrack.trackField[i], currentTrack.startLine, currentTrack.widthTrack);
-			currentTrack.partLineNumber[i] = 5;
+			wmemcpy(currTrack.trackField[i], currTrack.startLine, currTrack.widthTrack);
+			currTrack.partLineNumber[i] = 5;
 		}
 	}
+}
+
+void pastTrackToGameField(Track &currTrack, GameField &currGameField)
+{
+	currGameField.needRefreshScreen = true;
+	for (int i = 0; i < currTrack.heightTrack; i++)
+	{
+		int heightIndex = i;
+		//copy(begin(currTrack.trackField[i]), end(currTrack.trackField[i]), currGameField.characterCells[heightIndex]);
+		wmemcpy(currGameField.characterCells[heightIndex], currTrack.trackField[i], currTrack.widthTrack);
+	}
+
 }
 
 int main()
@@ -102,28 +127,10 @@ int main()
 
 	Car newCar;
 	Track newTrack;
-	/*
-	for (short i = 0; i < newTrack.heightTrack; i++)
-	{
-		if (i != 0)
-		{
-			static short ctn = 6;
-			if (ctn > 1 && ctn < 6)
-			{
-				wmemcpy(newTrack.trackField[i], newTrack.middlePart, newTrack.widthTrack);				
-			}
-			else
-			{
-				wmemcpy(newTrack.trackField[i], newTrack.emptyPart, newTrack.widthTrack);
-				if (ctn > 2) ctn = 0;
-			}
-			ctn++;
-		}
-		else wmemcpy(newTrack.trackField[i], newTrack.startLine, newTrack.widthTrack);
-				
-	}
-	*/
+	GameField _GameField;
+	
 	addNextLine(true, newTrack);
+	pastTrackToGameField(newTrack, _GameField);
 	auto tp1 = chrono::system_clock::now();
 	auto tp2 = chrono::system_clock::now();
 
@@ -139,22 +146,26 @@ int main()
 		float fElapsedTime = elapsedTime.count();
 
 		TimeFromStart += fElapsedTime;
-		if (!(TimeFromStart < 2))		
+		if (!(TimeFromStart < _GameField.delayForStart))
 		{
-			S += V * fElapsedTime;
+			S += V * static_cast<long double>(fElapsedTime);
 			if (S > S_total)
 			{
 				S_total++;
 				addNextLine(false, newTrack);
+				pastTrackToGameField(newTrack, _GameField);
 			}
 		}		
 		if (newTrack.NeedRefreshScreen)
 		{
-			for (short i = 0; i < newTrack.heightTrack; i++)
+			for (short i = 0; i < _GameField.heightGameField; i++)
 			{
 				//swprintf_s(newTrack.trackField[newTrack.heightTrack - 1], newTrack.widthTrack - 4, L"FPS=%4.3f", TimeFromStart);//1.0f / fElapsedTime);
-				short invert = newTrack.heightTrack - i - 1;
-				WriteConsoleOutputCharacter(hConsole, newTrack.trackField[i], newTrack.widthTrack, { 0, invert }, &dwBytesWritten);
+				//short invert = newTrack.heightTrack - i - 1;
+				//WriteConsoleOutputCharacter(hConsole, newTrack.trackField[i], newTrack.widthTrack, { 0, invert }, &dwBytesWritten);
+
+				short invert = _GameField.heightGameField - i - 1;
+				WriteConsoleOutputCharacter(hConsole, _GameField.characterCells[i], _GameField.widthGameField, { 0, invert }, &dwBytesWritten);
 			}
 			newTrack.NeedRefreshScreen = false;
 		}
