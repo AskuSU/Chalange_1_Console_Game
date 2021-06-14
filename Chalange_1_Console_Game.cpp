@@ -7,58 +7,79 @@ using namespace std;
 
 typedef struct car
 {
-	const wchar_t mas[4][6] = {
+	static const unsigned short height = 4;
+	static const unsigned short width = 6;
+	const wchar_t carCells[height][width] = {
 		{0x0020, 0x0020, 0x2588, 0x2588, 0x0020, 0x0020}
 		,{0x2588, 0x2588, 0x2588, 0x2588, 0x2588, 0x2588}
 		,{0x0020, 0x0020, 0x2588, 0x2588, 0x0020, 0x0020}
 		,{0x2588, 0x2588, 0x0020, 0x0020, 0x2588, 0x2588}
 	};
+	const wchar_t carEndLineCells[width] = {
+		0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020
+	};
+	unsigned short xPos;
 	const float speedLevel[6] = { 0.f, 1.f, 1.5f, 2.f, 2.5f, 10.f };
 	const short acceleration = 2;
+	car(unsigned short xPosP)
+	{
+		xPos = xPosP;
+	}
 } Car;
 
 typedef struct track
 {
-	static const short widthTrack = 20;
-	static const short heightTrack = 28;
-	const wchar_t startLine[widthTrack] = { 
+	static const unsigned short width = 20;
+	static const unsigned short height = 28;
+	const wchar_t startLine[width] = { 
 		0x255A, 0x2550, 0x2550, 0x2550, 0x2550,
 		0x2550, 0x2550, 0x2550, 0x2550, 0x2550,
 		0x2550, 0x2550, 0x2550, 0x2550, 0x2550,
 		0x2550, 0x2550, 0x2550, 0x2550, 0x255D
 	};
-	const wchar_t middlePart[widthTrack] = { 
+	const wchar_t middlePart[width] = { 
 		0x2551, 0x0020, 0x0020, 0x0020, 0x0020,
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
 		0x0020, 0x0020, 0x0020, 0x0020, 0x2551
 	};
-	const wchar_t emptyPart[widthTrack] = {  
+	const wchar_t emptyPart[width] = {  
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020
 	};
-	wchar_t trackField[heightTrack][widthTrack];// = { {' '} };
-	short partLineNumber[heightTrack];
-	boolean NeedRefreshScreen = false;
+	wchar_t trackField[height][width];// = { {' '} };
+	unsigned short partLineNumber[height];
+	bool NeedRefreshScreen = false;
+	track()
+	{
+		for (short i = 0; i < height; i++)
+		{
+			for (short j = 0; j < width; j++)
+			{
+				trackField[i][j] = ' ';
+			}
+			partLineNumber[i] = i;
+		}
+	}
 } Track;
 
 typedef struct gameField
 {
-	static const short widthGameField = 45;
-	static const short heightGameField = 35;
-	static const short startPosWidthTrack = 2;
-	static const short startPosHeightTrack = 4;
+	static const unsigned short height = 35;
+	static const unsigned short width = 45;
+	static const unsigned short startPosWidthTrack = 2;
+	static const unsigned short startPosHeightTrack = 2;
 
-	static const short delayForStart = 1;
+	static const unsigned short delayForStart = 1;
 
-	wchar_t characterCells[heightGameField][widthGameField];// = { {' '} };
-	boolean needRefreshScreen = false;
+	wchar_t characterCells[height][width];// = { {' '} };
+	bool needRefreshScreen = false;
 	gameField()
 	{
-		for (short i = 0; i < heightGameField; i++)		
-			for (short j = 0; j < widthGameField; j++)
+		for (short i = 0; i < height; i++)		
+			for (short j = 0; j < width; j++)
 			{
 				characterCells[i][j] = ' ';
 			}
@@ -67,18 +88,15 @@ typedef struct gameField
 } GameField;
 
 
-int nScreenWidth = 120;	
-int nScreenHeight = 40;
 
-
-void addNextLine(boolean isFirst, Track &currTrack)
+void addNextLine(bool isFirst, Track &currTrack)
 {
 	currTrack.NeedRefreshScreen = true;
-	for (short i = 0; i < currTrack.heightTrack; i++)
+	for (short i = 0; i < currTrack.height; i++)
 	{
-		if (!isFirst && i < currTrack.heightTrack - 1)
+		if (!isFirst && i < currTrack.height - 1)
 		{
-			wmemcpy(currTrack.trackField[i], currTrack.trackField[i + 1], currTrack.widthTrack);
+			wmemcpy(currTrack.trackField[i], currTrack.trackField[i + 1], currTrack.width);
 			currTrack.partLineNumber[i] = currTrack.partLineNumber[i + 1];
 		}
 		else if (i != 0)
@@ -86,32 +104,43 @@ void addNextLine(boolean isFirst, Track &currTrack)
 			currTrack.partLineNumber[i] = currTrack.partLineNumber[i - 1] + 1;
 			if (currTrack.partLineNumber[i] > 1 && currTrack.partLineNumber[i] < 6)
 			{
-				wmemcpy(currTrack.trackField[i], currTrack.middlePart, currTrack.widthTrack);
+				wmemcpy(currTrack.trackField[i], currTrack.middlePart, currTrack.width);
 			}
 			else
 			{
-				wmemcpy(currTrack.trackField[i], currTrack.emptyPart, currTrack.widthTrack);
+				wmemcpy(currTrack.trackField[i], currTrack.emptyPart, currTrack.width);
 				if (currTrack.partLineNumber[i] > 2) currTrack.partLineNumber[i] = 0;
 			}			
 		}
 		else
 		{
-			wmemcpy(currTrack.trackField[i], currTrack.startLine, currTrack.widthTrack);
+			wmemcpy(currTrack.trackField[i], currTrack.startLine, currTrack.width);
 			currTrack.partLineNumber[i] = 5;
 		}
 	}
 }
 
-void pastTrackToGameField(Track &currTrack, GameField &currGameField)
+void pastTrackOnTheGameField(Track &currTrack, GameField &currGameField)
 {
 	currGameField.needRefreshScreen = true;
-	for (int i = 0; i < currTrack.heightTrack; i++)
+	for (int i = 0; i < currTrack.height; i++)
 	{
-		int heightIndex = i;
-		//copy(begin(currTrack.trackField[i]), end(currTrack.trackField[i]), currGameField.characterCells[heightIndex]);
-		wmemcpy(currGameField.characterCells[heightIndex], currTrack.trackField[i], currTrack.widthTrack);
+		unsigned short heightIndex = i + (currGameField.height - currTrack.height) - currGameField.startPosHeightTrack;
+		copy(begin(currTrack.trackField[i]), end(currTrack.trackField[i]), currGameField.characterCells[heightIndex] + currGameField.startPosWidthTrack);
+		//wmemcpy(currGameField.characterCells[heightIndex], currTrack.trackField[i], currTrack.widthTrack);
 	}
+}
 
+void pastCarOnTheTrack(Car &car, Track &track, bool startFlag)
+{
+	unsigned short heightIndex = 0;
+	unsigned short widthIndex = car.xPos - car.width / 2;
+	if (!startFlag) copy(begin(car.carEndLineCells), end(car.carEndLineCells), track.trackField[heightIndex] + widthIndex);
+	for (size_t i = 0; i < car.height; i++)
+	{		
+		heightIndex = i + 1;
+		copy(begin(car.carCells[car.height - 1 - i]), end(car.carCells[car.height - 1 - i]), track.trackField[heightIndex] + widthIndex);
+	}
 }
 
 int main()
@@ -125,12 +154,13 @@ int main()
 	SetConsoleActiveScreenBuffer(hConsole);
 	DWORD dwBytesWritten = 0;
 
-	Car newCar;
 	Track newTrack;
+	Car newCar(newTrack.width / 2);
 	GameField _GameField;
 	
 	addNextLine(true, newTrack);
-	pastTrackToGameField(newTrack, _GameField);
+	pastCarOnTheTrack(newCar, newTrack, true);
+	pastTrackOnTheGameField(newTrack, _GameField);
 	auto tp1 = chrono::system_clock::now();
 	auto tp2 = chrono::system_clock::now();
 
@@ -153,19 +183,20 @@ int main()
 			{
 				S_total++;
 				addNextLine(false, newTrack);
-				pastTrackToGameField(newTrack, _GameField);
+				pastCarOnTheTrack(newCar, newTrack, false);
+				pastTrackOnTheGameField(newTrack, _GameField);
 			}
 		}		
 		if (newTrack.NeedRefreshScreen)
 		{
-			for (short i = 0; i < _GameField.heightGameField; i++)
+			for (short i = 0; i < _GameField.height; i++)
 			{
 				//swprintf_s(newTrack.trackField[newTrack.heightTrack - 1], newTrack.widthTrack - 4, L"FPS=%4.3f", TimeFromStart);//1.0f / fElapsedTime);
 				//short invert = newTrack.heightTrack - i - 1;
 				//WriteConsoleOutputCharacter(hConsole, newTrack.trackField[i], newTrack.widthTrack, { 0, invert }, &dwBytesWritten);
 
-				short invert = _GameField.heightGameField - i - 1;
-				WriteConsoleOutputCharacter(hConsole, _GameField.characterCells[i], _GameField.widthGameField, { 0, invert }, &dwBytesWritten);
+				short invert = _GameField.height - i - 1;
+				WriteConsoleOutputCharacter(hConsole, _GameField.characterCells[i], _GameField.width, { 0, invert }, &dwBytesWritten);
 			}
 			newTrack.NeedRefreshScreen = false;
 		}
