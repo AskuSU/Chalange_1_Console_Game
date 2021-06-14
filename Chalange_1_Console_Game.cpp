@@ -7,6 +7,10 @@ using namespace std;
 
 typedef struct car
 {
+private:
+	unsigned short xPos;
+	unsigned short widthTrack;
+public:
 	static const unsigned short height = 4;
 	static const unsigned short width = 6;
 	const wchar_t carCells[height][width] = {
@@ -18,12 +22,33 @@ typedef struct car
 	const wchar_t carEndLineCells[width] = {
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020
 	};
-	unsigned short xPos;
+
 	const float speedLevel[6] = { 0.f, 1.f, 1.5f, 2.f, 2.5f, 10.f };
 	const short acceleration = 2;
-	car(unsigned short xPosP)
+	float offsetX = 0;
+	car(unsigned short widthTrackP)
 	{
-		xPos = xPosP;
+		xPos = widthTrackP / 2;
+		widthTrack = widthTrackP;
+	}
+	unsigned short GetX_Pos()
+	{
+		return xPos;
+	}
+	void changeX_Pos(short axisX)
+	{
+		if (xPos + axisX > width / 2 + 1 && xPos + axisX < widthTrack - width / 2 - 1)
+		{
+			xPos += axisX;
+		}
+		else if (axisX < 0)
+		{
+			xPos = width / 2 + 1;
+		}
+		else
+		{
+			xPos = widthTrack - width / 2 - 1;
+		}
 	}
 } Car;
 
@@ -49,7 +74,7 @@ typedef struct track
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
 		0x0020, 0x0020, 0x0020, 0x0020, 0x0020
 	};
-	wchar_t trackField[height][width];// = { {' '} };
+	wchar_t trackField[height][width];
 	unsigned short partLineNumber[height];
 	bool NeedRefreshScreen = false;
 	track()
@@ -74,7 +99,7 @@ typedef struct gameField
 
 	static const unsigned short delayForStart = 1;
 
-	wchar_t characterCells[height][width];// = { {' '} };
+	wchar_t characterCells[height][width];
 	bool needRefreshScreen = false;
 	gameField()
 	{
@@ -127,16 +152,15 @@ void pastTrackOnTheGameField(Track &currTrack, GameField &currGameField)
 	{
 		unsigned short heightIndex = i + (currGameField.height - currTrack.height) - currGameField.startPosHeightTrack;
 		copy(begin(currTrack.trackField[i]), end(currTrack.trackField[i]), currGameField.characterCells[heightIndex] + currGameField.startPosWidthTrack);
-		//wmemcpy(currGameField.characterCells[heightIndex], currTrack.trackField[i], currTrack.widthTrack);
 	}
 }
 
 void pastCarOnTheTrack(Car &car, Track &track, bool startFlag)
 {
 	unsigned short heightIndex = 0;
-	unsigned short widthIndex = car.xPos - car.width / 2;
+	unsigned short widthIndex = car.GetX_Pos() - car.width / 2;
 	if (!startFlag) copy(begin(car.carEndLineCells), end(car.carEndLineCells), track.trackField[heightIndex] + widthIndex);
-	for (size_t i = 0; i < car.height; i++)
+	for (unsigned short i = 0; i < car.height; i++)
 	{		
 		heightIndex = i + 1;
 		copy(begin(car.carCells[car.height - 1 - i]), end(car.carCells[car.height - 1 - i]), track.trackField[heightIndex] + widthIndex);
@@ -149,13 +173,12 @@ int main()
 	//CONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo;
 	//wchar_t* screnSpace = new wchar_t[nScreenHeight * nScreenWidth];
 
-	//wchar_t* screen = new wchar_t[nScreenWidth * nScreenHeight];
 	HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	SetConsoleActiveScreenBuffer(hConsole);
 	DWORD dwBytesWritten = 0;
 
 	Track newTrack;
-	Car newCar(newTrack.width / 2);
+	Car newCar(newTrack.width);
 	GameField _GameField;
 	
 	addNextLine(true, newTrack);
@@ -200,7 +223,31 @@ int main()
 			}
 			newTrack.NeedRefreshScreen = false;
 		}
+
+		if (GetAsyncKeyState((unsigned short)'A') & 0x8000)
+		{
+			if (newCar.offsetX > 0) newCar.offsetX = 0;
+			newCar.offsetX -= 10.0f * fElapsedTime;
+		}
 		
+		if (GetAsyncKeyState((unsigned short)'D') & 0x8000)
+		{
+			if (newCar.offsetX < 0) newCar.offsetX = 0;
+			newCar.offsetX += 10.0f * fElapsedTime;
+		}
+
+		if (newCar.offsetX > 1)
+		{
+			newCar.changeX_Pos(1);
+			newCar.offsetX -= 1;
+		}
+		else if (newCar.offsetX < -1)
+		{
+			newCar.changeX_Pos(-1);
+			newCar.offsetX += 1;
+		}
+		
+
 		//WriteConsoleOutputCharacter(hConsole, newCar.mas[0], 3, { 0,0 }, &dwBytesWritten);
 		//WriteConsoleOutputCharacter(hConsole, newCar.mas[1], 3, { 0,1 }, &dwBytesWritten);
 		//WriteConsoleOutputCharacter(hConsole, newTrack.middlePart, 12, { 0,2 }, &dwBytesWritten);
