@@ -526,7 +526,7 @@ int32_t getRandomNum(int32_t min, int32_t max)
 
 
  B.
-  	░
+  	░ 2591
 176	▒
 177	▓
 178	│

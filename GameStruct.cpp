@@ -3,6 +3,7 @@
 car::car(unsigned short widthTrackP)
 {
 	xPos = widthTrackP / 2;
+	xPosPrevious = xPos;
 	widthTrack = widthTrackP;
 }
 
@@ -11,8 +12,14 @@ unsigned short car::GetX_Pos()
 	return xPos;
 }
 
+unsigned short car::GetX_PosPrevious()
+{
+	return xPosPrevious;
+}
+
 void car::changeX_Pos(short axisX)
 {
+	xPosPrevious = xPos;
 	if (xPos + axisX > width / 2 + 1 && xPos + axisX < widthTrack - width / 2 - 1)
 	{
 		xPos += axisX;

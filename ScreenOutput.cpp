@@ -6,7 +6,7 @@ void addNextLine(bool isFirst, Track& currTrack)
 {
 	currTrack.NeedRefreshScreen = true;
 	for (short i = 0; i < currTrack.height; i++)
-	{
+	{		
 		if (!isFirst && i < currTrack.height - 1)
 		{
 			wmemcpy(currTrack.trackField[i], currTrack.trackField[i + 1], currTrack.width);
@@ -47,7 +47,16 @@ void pastCarOnTheTrack(Car& car, Track& track, bool startFlag)
 {
 	unsigned short heightIndex = 0;
 	unsigned short widthIndex = car.GetX_Pos() - car.width / 2;
-	if (!startFlag) copy(begin(car.carEndLineCells), end(car.carEndLineCells), track.trackField[heightIndex] + widthIndex);
+	unsigned short widthIndexPrevious = car.GetX_PosPrevious() - car.width / 2;
+	if (!startFlag)
+	{	
+		copy(begin(car.carEndLineCells), end(car.carEndLineCells), track.trackField[heightIndex] + widthIndex);
+		for (unsigned short i = 0; i < car.height; i++)
+		{
+			heightIndex = i;
+			copy(begin(car.carCellsErasure[car.height - 1 - i]), end(car.carCellsErasure[car.height - 1 - i]), track.trackField[heightIndex] + widthIndexPrevious);
+		}
+	}
 	for (unsigned short i = 0; i < car.height; i++)
 	{
 		heightIndex = i + 1;
