@@ -140,6 +140,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Chalange_1_Console_Game.cpp" />
+    <ClCompile Include="GameStruct.cpp" />
+    <ClCompile Include="ScreenOutput.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GameStruct.h" />
+    <ClInclude Include="ScreenOutput.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
